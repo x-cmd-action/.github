@@ -73,11 +73,15 @@ x-cmd ships hundreds of primitives (`x gitb backup`, `x gh`, `x repo`, `x eget`,
 
 ### Exceptions (where shell reimplementation is OK)
 
-- **LLM API calls** — x-cmd doesn't wrap OpenAI / Anthropic. Use `x curl` against the API directly.
-- **State across steps** — GitHub Actions has no built-in state, so use temp files / env vars.
-- **GitHub Actions native glue** — `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`, conditional `if:` expressions.
+**Just one: GitHub Actions–native glue.** x-cmd lives outside the GitHub Actions runtime, so it can't write to `$GITHUB_OUTPUT`, render `$GITHUB_STEP_SUMMARY`, evaluate `if:` expressions, declare matrix strategies, or read secrets. That orchestration code is the action's job — write it in shell.
 
-For everything else, **call x-cmd**.
+**Everything else, call x-cmd.** Apply the heuristic: *if the process can be atomized and clearly described, it should be expressible as one or more x-cmd commands.* So:
+
+- "Make an HTTPS request to LLM X" is atomizable → `x curl` does it. Not an exception.
+- "Persist key/value state across steps" is atomizable → x-cmd has file/env primitives. Not an exception.
+- "Write to `$GITHUB_OUTPUT`" is **not** atomizable into x-cmd — it's a GitHub Actions runtime concern. Exception.
+
+When in doubt: write the x-cmd version first. If x-cmd genuinely can't do it, the exception applies.
 
 ### Why this matters
 
