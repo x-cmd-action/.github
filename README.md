@@ -43,6 +43,7 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 - **v1 tag once shipped** + `@main` for the bleeding edge.
 - **Apache 2.0** across the org.
 - **`profile/README.md`** is the public surface; this file is the maintainer's view.
+- **Scope-appropriate naming.** Standalone actions in this org use **unprefixed** input names (`username`, `password`, `ssh-key`, `buildx-init`). The action's own scope is the disambiguator. Prefixes (`docker_username`, `ssh_key`) only appear in `x-cmd/action`, which has 17 inputs spanning multiple domains and needs them to disambiguate. When in doubt: name an input as if it were the only one in scope.
 
 ## Design Principle — Never Reimplement What x-cmd Does
 
