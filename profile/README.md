@@ -2,6 +2,8 @@
 
 GitHub Actions for the [x-cmd](https://github.com/x-cmd/x-cmd) ecosystem. Every action in this org is **pure shell** — no Node.js runtime, no bundled JS, no nested action dependencies.
 
+Shell over Node.js on purpose: bash and coreutils don't release major versions every six months the way Node.js does, so a `v1` action written today still works on a runner in 2030. No more "this action now runs on Node 24" releases.
+
 [中文](./README.cn.md)
 
 ## Actions

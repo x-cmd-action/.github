@@ -2,6 +2,8 @@
 
 [x-cmd](https://github.com/x-cmd/x-cmd) 生态的 GitHub Actions。这个 org 下每个 action 都是**纯 shell** —— 没有 Node.js runtime、没有 JS bundle、没有嵌套 action 依赖。
 
+选 shell 不选 Node.js 是故意的：bash 和 coreutils 不会像 Node.js 那样每半年发一个大版本。今天写的 `v1` action 在 2030 年的 runner 上照样能跑。再也不会有"这个 action 现在跑在 Node 24 上"的 release。
+
 [English](./README.md)
 
 ## Actions
