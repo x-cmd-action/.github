@@ -14,11 +14,11 @@ Actions that bring the runner close to a local dev environment. **Composable, mu
 
 | Action | Status | Purpose |
 | --- | --- | --- |
-| [`x-cmd`](../x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
-| [`checkout`](../checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep; repo-scoped `gitconfig` via `[include]`) |
-| [`ssh`](../ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
-| [`docker`](../docker) | ✅ shipped (v1) | docker login + buildx init |
-| [`gitconfig`](../gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file) |
+| [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep; repo-scoped `gitconfig` via `[include]`) |
+| [`ssh`](https://github.com/x-cmd-action/ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
+| [`docker`](https://github.com/x-cmd-action/docker) | ✅ shipped (v1) | docker login + buildx init |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file) |
 
 **Why this layer exists.** x-cmd `gitb backup` requires ssh-keyscan. `x gh` requires a GitHub token. Most x-cmd-based actions need *some* of this wiring. Splitting them out lets users compose exactly what they need without paying for what they don't.
 
@@ -28,7 +28,7 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 
 | Action | Status | Purpose |
 | --- | --- | --- |
-| [`gitmirror`](../gitmirror) | ✅ shipped (v1) | sync repos you follow across GitHub ↔ Gitee ↔ Codeberg |
+| [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | ✅ shipped (v1) | sync repos you follow across GitHub ↔ Gitee ↔ Codeberg |
 | `ghwatch` | 🚧 TODO | watch issues & releases on projects you follow |
 | `ghissuereply` | 🚧 TODO | quick-draft replies to incoming issues |
 | `ghissuegold` | 🚧 TODO | extract useful patterns / answers from issue threads |
