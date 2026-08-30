@@ -14,11 +14,11 @@ Composable environment-setup actions. Each does one thing; pick what you need.
 
 | Action | Description | Latest |
 | --- | --- | --- |
-| [`x-cmd`](./x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](./checkout) | Pure-shell `git checkout`. 20 inputs, same surface as `actions/checkout`. **No x-cmd dep** — uses only `git`, `ssh-agent`, `ssh-keyscan`. Optional `gitconfig` input for repo-scoped config via `[include]`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ssh`](./ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`docker`](./docker) | Pure-shell `docker login` + `docker buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitconfig`](./gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | Pure-shell `git checkout`. 20 inputs, same surface as `actions/checkout`. **No x-cmd dep** — uses only `git`, `ssh-agent`, `ssh-keyscan`. Optional `gitconfig` input for repo-scoped config via `[include]`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ssh`](https://github.com/x-cmd-action/ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`docker`](https://github.com/x-cmd-action/docker) | Pure-shell `docker login` + `docker buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ### Layer 2 — Common Functions
 
@@ -26,7 +26,7 @@ Self-contained automations. Each does one recurring workflow job, built on Layer
 
 | Action | Description | Latest |
 | --- | --- | --- |
-| [`gitmirror`](./gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. Three list-source styles, fan-out concurrency. Requires x-cmd (uses `x gitb backup`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. Three list-source styles, fan-out concurrency. Requires x-cmd (uses `x gitb backup`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor`) — see the [internal roadmap](https://github.com/x-cmd-action/.github/blob/main/README.md).
 
