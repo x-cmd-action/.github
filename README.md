@@ -1,0 +1,76 @@
+# x-cmd-action (internal)
+
+> **For org maintainers only.** This is the internal view — categorizing actions, tracking planned work, recording design intent. The public-facing version is [`profile/README.md`](./profile/README.md).
+
+## Audience & Purpose
+
+This org builds actions for **super individuals** (超级个体) — people running their own personal workflow pipelines on GitHub Actions. The actions here are designed to be composable and to make a fresh CI runner feel close to a local dev environment, so users can iterate on personal automation cheaply.
+
+We organize actions in two layers.
+
+## Layer 1 — Basic Setup
+
+Actions that bring the runner close to a local dev environment. **Composable, mutually independent.** Pick what you need; the goal is "I can use this runner like my laptop."
+
+| Action | Status | Purpose |
+| --- | --- | --- |
+| [`x-cmd`](../x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
+| [`checkout`](../checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep) |
+| [`ssh`](../ssh) | 🚧 TODO | ssh-agent + known_hosts setup |
+| [`docker`](../docker) | 🚧 TODO | docker login + buildx init |
+
+**Why this layer exists.** x-cmd `gitb backup` requires ssh-keyscan. `x gh` requires a GitHub token. Most x-cmd-based actions need *some* of this wiring. Splitting them out lets users compose exactly what they need without paying for what they don't.
+
+## Layer 2 — Common Functions
+
+Self-contained automations built on Layer 1. Each solves one recurring workflow problem.
+
+| Action | Status | Purpose |
+| --- | --- | --- |
+| [`gitmirror`](../gitmirror) | ✅ shipped (v1) | sync repos you follow across GitHub ↔ Gitee ↔ Codeberg |
+| [`ghwatch`](../ghwatch) | 🚧 TODO | watch issues & releases on projects you follow |
+| [`ghissuereply`](../ghissuereply) | 🚧 TODO | quick-draft replies to incoming issues |
+| [`ghissuegold`](../ghissuegold) | 🚧 TODO | extract useful patterns / answers from issue threads |
+| [`webmonitor`](../webmonitor) | 🚧 TODO | generic URL/diff watcher |
+| [`hnmonitor`](../hnmonitor) | 🚧 TODO | HN top-stories monitor |
+
+**Why this layer exists.** Common functions can usually be expressed as a Layer 1 setup + an x-cmd script. We package them so users don't pay the maintenance cost of re-discovering the right x-cmd incantation each time. Internally each one is **a thin shell wrapper around x-cmd commands** — never a re-implementation.
+
+## Conventions
+
+- **Pure shell only.** No TypeScript / Node.js bundles.
+- **One action per repo.** No monorepos.
+- **v1 tag once shipped** + `@main` for the bleeding edge.
+- **Apache 2.0** across the org.
+- **`profile/README.md`** is the public surface; this file is the maintainer's view.
+
+## TODO
+
+### Extract from `x-cmd/action`
+
+- [ ] **`x-cmd-action/ssh`** — extract the ssh-agent / known_hosts setup from `x-cmd/action` into a standalone action (input: `ssh_key`). Lets users add SSH to any workflow without pulling in the full `x-cmd/action`.
+- [ ] **`x-cmd-action/docker`** — extract `docker login` + `docker buildx create --use` from `x-cmd/action` into a standalone action (inputs: `docker_username`, `docker_password`, `docker_buildx_init`).
+
+### New Layer 2 actions
+
+- [ ] **`x-cmd-action/ghwatch`** — `on: schedule: cron: '0 */6 * * *'`. For a list of `repo` in input, fetch recent issues + releases via `x gh`. Output as JSON to `$GITHUB_STEP_SUMMARY` or push to a gist.
+- [ ] **`x-cmd-action/ghissuereply`** — given an issue number, draft a reply using a configurable template + LLM call. Use `x gh` for fetching, output the draft as a PR-able markdown file.
+- [ ] **`x-cmd-action/ghissuegold`** — given a closed issue (or thread), summarize the accepted answer / fix into a reusable snippet. Output to a knowledge-base file via PR.
+- [ ] **`x-cmd-action/webmonitor`** — generic: take a list of URLs, fetch, diff against cached snapshot, open an issue if changed.
+- [ ] **`x-cmd-action/hnmonitor`** — Hacker News top stories monitor. Uses `x web` or `x curl` to hit the HN API, output new stories as a digest.
+
+### Org-level
+
+- [ ] Add CI workflow to this `.github` repo that runs every action's `test-*.yml` on schedule (catch regressions across the org).
+- [ ] Add `CODE_OF_CONDUCT.md` + `CONTRIBUTING.md` at the repo root (the public-facing `profile/README.md` is enough for now).
+- [ ] Decide whether `ssh` and `docker` go in this org or stay as inputs of `x-cmd/action`. (User said: make them actions. To do.)
+
+## Open questions
+
+- Should Layer 2 actions live in `x-cmd-action` org or somewhere else (e.g., the user's personal org)? Currently public in `x-cmd-action` for visibility.
+- Should `gitmirror` / `ghwatch` etc. share a common "config-from-file" pattern (e.g., `.config/watched-repos.tsv`)? Probably yes — extract a reusable input convention.
+- Naming: are `ghwatch` / `ghissuereply` etc. the right names? Or rename to `x-cmd-action/watch-github`, `x-cmd-action/reply-issue` for consistency with `gitmirror`? (Current preference: short, verb-first.)
+
+## Related internal docs
+
+- (none yet — this file is the start of internal documentation)
