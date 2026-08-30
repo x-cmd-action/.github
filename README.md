@@ -28,11 +28,11 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 | Action | Status | Purpose |
 | --- | --- | --- |
 | [`gitmirror`](../gitmirror) | ✅ shipped (v1) | sync repos you follow across GitHub ↔ Gitee ↔ Codeberg |
-| [`ghwatch`](../ghwatch) | 🚧 TODO | watch issues & releases on projects you follow |
-| [`ghissuereply`](../ghissuereply) | 🚧 TODO | quick-draft replies to incoming issues |
-| [`ghissuegold`](../ghissuegold) | 🚧 TODO | extract useful patterns / answers from issue threads |
-| [`webmonitor`](../webmonitor) | 🚧 TODO | generic URL/diff watcher |
-| [`hnmonitor`](../hnmonitor) | 🚧 TODO | HN top-stories monitor |
+| `ghwatch` | 🚧 TODO | watch issues & releases on projects you follow |
+| `ghissuereply` | 🚧 TODO | quick-draft replies to incoming issues |
+| `ghissuegold` | 🚧 TODO | extract useful patterns / answers from issue threads |
+| `webmonitor` | 🚧 TODO | generic URL/diff watcher |
+| `hnmonitor` | 🚧 TODO | HN top-stories monitor |
 
 **Why this layer exists.** Common functions can usually be expressed as a Layer 1 setup + an x-cmd script. We package them so users don't pay the maintenance cost of re-discovering the right x-cmd incantation each time. Internally each one is **a thin shell wrapper around x-cmd commands** — never a re-implementation.
 
