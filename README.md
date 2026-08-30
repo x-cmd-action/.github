@@ -15,12 +15,14 @@ Actions that bring the runner close to a local dev environment. **Composable, mu
 | Action | Status | Purpose |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
-| [`checkout`](https://github.com/x-cmd-action/checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep; repo-scoped `gitconfig` via `[include]`) |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | ✅ shipped (v1) | clone trigger repo to `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache). Token-only, no SSH, no extras. |
 | [`ssh`](https://github.com/x-cmd-action/ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
 | [`docker`](https://github.com/x-cmd-action/docker) | ✅ shipped (v1) | docker login + buildx init |
-| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file) |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file). Position-independent — no repo-scoped logic. |
 
 **Why this layer exists.** x-cmd `gitb backup` requires ssh-keyscan. `x gh` requires a GitHub token. Most x-cmd-based actions need *some* of this wiring. Splitting them out lets users compose exactly what they need without paying for what they don't.
+
+**Why `gitconfig` has no `local-config` input.** `local-config` writes to a specific repo's `.git/config`, which implicitly depends on cwd (a specific repo). That's coupling that belongs on the action that *knows* what repo it's checking out — `checkout` / `this-repo`. A global config action should be position-independent. See the FAQ in `gitconfig/README.md`.
 
 ## Layer 2 — Common Functions
 
@@ -28,12 +30,15 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 
 | Action | Status | Purpose |
 | --- | --- | --- |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | ✅ shipped (v1) | pure-shell `git checkout`. 22 inputs, 1:1 parity with `actions/checkout@v4` + 3 x-cmd enhancements (`known-hosts-url`, `fetch-additional`, `local-config`). Uses `GIT_SSH_COMMAND` + temp files (mirrors actions/checkout). |
 | [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | ✅ shipped (v1) | sync repos you follow across GitHub ↔ Gitee ↔ Codeberg |
 | `ghwatch` | 🚧 TODO | watch issues & releases on projects you follow |
 | `ghissuereply` | 🚧 TODO | quick-draft replies to incoming issues |
 | `ghissuegold` | 🚧 TODO | extract useful patterns / answers from issue threads |
 | `webmonitor` | 🚧 TODO | generic URL/diff watcher |
 | `hnmonitor` | 🚧 TODO | HN top-stories monitor |
+
+**Why `checkout` moved here.** It composes token/SSH/sparse/filter/identity into one action — that's exactly what Layer 2 is for (a recurring workflow job, built on Layer 1). Layer 1 has `this-repo` for users who just want "give me this repo, nothing fancy."
 
 **Why this layer exists.** Common functions can usually be expressed as a Layer 1 setup + an x-cmd script. We package them so users don't pay the maintenance cost of re-discovering the right x-cmd incantation each time. Internally each one is **a thin shell wrapper around x-cmd commands** — never a re-implementation.
 

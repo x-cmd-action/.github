@@ -15,17 +15,18 @@ Composable environment-setup actions. Each does one thing; pick what you need.
 | Action | Description | Latest |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](https://github.com/x-cmd-action/checkout) | Pure-shell `git checkout`. 20 inputs, same surface as `actions/checkout`. **No x-cmd dep** — uses only `git`, `ssh-agent`, `ssh-keyscan`. Optional `gitconfig` input for repo-scoped config via `[include]`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | Clone the trigger repo into `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache layout). Pure shell, GitHub-token only. The minimal "give me this repo" action. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ssh`](https://github.com/x-cmd-action/ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`docker`](https://github.com/x-cmd-action/docker) | Pure-shell `docker login` + `docker buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. Position-independent — no `local-config` here (use `checkout`/`this-repo` for repo-scoped overlay). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ### Layer 2 — Common Functions
 
-Self-contained automations. Each does one recurring workflow job, built on Layer 1 + x-cmd modules.
+Higher-level automations. Each composes Layer 1 actions (and x-cmd commands) into a recurring workflow job.
 
 | Action | Description | Latest |
 | --- | --- | --- |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | Pure-shell `git checkout`. 22 inputs, 1:1 with `actions/checkout@v4` plus 3 x-cmd enhancements (`known-hosts-url`, `fetch-additional`, `local-config`). Uses `GIT_SSH_COMMAND` with temp files + hardcoded `github.com` key (mirrors `actions/checkout`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. Three list-source styles, fan-out concurrency. Requires x-cmd (uses `x gitb backup`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor`) — see the [internal roadmap](https://github.com/x-cmd-action/.github/blob/main/README.md).
@@ -37,17 +38,25 @@ More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor
 │  Your workflow                                      │
 └─────────────────┬───────────────────────────────────┘
                   │
-       ┌──────────┼──────────┐
-       ▼          ▼          ▼
-   x-cmd      checkout    gitmirror
-   (install)  (clone)     (sync)
+   ┌──────────────┼──────────────┐
+   ▼              ▼              ▼
+ x-cmd        this-repo      gitmirror
+ (install)    (clone this)   (sync)
+   │              │
+   │              ▼
+   │          checkout     ← Layer 2: full actions/checkout
+   │          (clone+more)
+   ▼
+ ssh, docker, gitconfig
+ (each adds one piece)
 ```
 
 - **`x-cmd`** — install x-cmd. Use when you want `x` available.
-- **`checkout`** — clone a repo into the workspace. Use instead of `actions/checkout` when you don't want Node.js.
-- **`gitmirror`** — periodic one-way replication across platforms. Use when you maintain a mirror on Gitee/Codeberg.
+- **`this-repo`** — clone the trigger repo to `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache). Minimal — use this by default.
+- **`checkout`** — clone with full `actions/checkout` parity (SSH, sparse, filter, etc.). Use when `this-repo` is too thin.
+- **`gitmirror`** — periodic one-way replication across platforms.
 
-These three are peers — pick whichever you need, compose freely.
+These are peers — pick whichever you need, compose freely.
 
 [`x-cmd/action`](https://github.com/x-cmd/action) lives in a separate repo and is a **different tool**: it installs x-cmd AND assumes you'll do the rest of the CI with x-cmd commands (`x gitb`, `x ws`, etc.) — i.e., "1 action + x-cmd commands = full CI". Use it when your whole CI is x-cmd-driven.
 
