@@ -16,8 +16,8 @@ Actions that bring the runner close to a local dev environment. **Composable, mu
 | --- | --- | --- |
 | [`x-cmd`](../x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
 | [`checkout`](../checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep) |
-| [`ssh`](../ssh) | 🚧 TODO | ssh-agent + known_hosts setup |
-| [`docker`](../docker) | 🚧 TODO | docker login + buildx init |
+| [`ssh`](../ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
+| [`docker`](../docker) | ✅ shipped (v1) | docker login + buildx init |
 
 **Why this layer exists.** x-cmd `gitb backup` requires ssh-keyscan. `x gh` requires a GitHub token. Most x-cmd-based actions need *some* of this wiring. Splitting them out lets users compose exactly what they need without paying for what they don't.
 
@@ -54,22 +54,24 @@ x-cmd ships hundreds of primitives (`x gitb backup`, `x gh`, `x repo`, `x eget`,
 
 ### Concretely
 
-**Do not** in your action's shell:
+#### ❌ Don't write in shell — let x-cmd do it
 
-- ❌ `git clone --bare` + `git push` — use `x gitb backup`
-- ❌ Custom GitHub API client — use `x gh`
-- ❌ Custom URL fetcher — use `x curl` (or `x http` / `x fetch`)
-- ❌ Custom JSON parser — use `x jq` / `x json`
-- ❌ Custom env manager — use `x env use <lang>`
-- ❌ Custom binary installer — use `x eget use`
+| If you need to... | Don't write... | Use x-cmd instead |
+| --- | --- | --- |
+| Mirror a repo | `git clone --bare` + `git push` | `x gitb backup` |
+| Call GitHub API | custom REST client | `x gh` |
+| Fetch a URL | custom HTTP wrapper | `x curl` / `x http` / `x fetch` |
+| Parse JSON | custom parser | `x jq` / `x json` |
+| Install a language toolchain | `apt install` / brew scripts | `x env use <lang>` |
+| Install a binary | curl + chmod + PATH hack | `x eget use` |
 
-**Do** in your action's shell:
+#### ✅ Do write in shell — but only for action glue
 
-- ✅ Parse inputs into a structure x-cmd understands
-- ✅ Wire up secrets / credentials (Layer 1 actions)
-- ✅ Call x-cmd with the parsed inputs
-- ✅ Format x-cmd output into GitHub-flavored outputs (markdown, `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`)
-- ✅ Implement GitHub Actions–specific glue (matrix, conditionals, env files)
+- Parse action inputs into a structure x-cmd understands
+- Wire up secrets / credentials (this is the Layer 1 actions' job)
+- Call x-cmd with the parsed inputs
+- Format x-cmd output into GitHub-flavored outputs (markdown, `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`)
+- Implement GitHub Actions–specific glue (matrix, conditionals, env files)
 
 ### Exceptions (where shell reimplementation is OK)
 
@@ -114,8 +116,8 @@ x gitb backup --force "$src" "$dest"
 
 ### Extract from `x-cmd/action`
 
-- [ ] **`x-cmd-action/ssh`** — extract the ssh-agent / known_hosts setup from `x-cmd/action` into a standalone action (input: `ssh_key`). Lets users add SSH to any workflow without pulling in the full `x-cmd/action`.
-- [ ] **`x-cmd-action/docker`** — extract `docker login` + `docker buildx create --use` from `x-cmd/action` into a standalone action (inputs: `docker_username`, `docker_password`, `docker_buildx_init`).
+- [x] **`x-cmd-action/ssh`** — extract the ssh-agent / known_hosts setup from `x-cmd/action` into a standalone action (input: `ssh_key`). Lets users add SSH to any workflow without pulling in the full `x-cmd/action`. — **Done, v1 shipped.**
+- [x] **`x-cmd-action/docker`** — extract `docker login` + `docker buildx create --use` from `x-cmd/action` into a standalone action (inputs: `docker_username`, `docker_password`, `docker_buildx_init`). — **Done, v1 shipped.**
 
 ### New Layer 2 actions
 
@@ -129,7 +131,7 @@ x gitb backup --force "$src" "$dest"
 
 - [ ] Add CI workflow to this `.github` repo that runs every action's `test-*.yml` on schedule (catch regressions across the org).
 - [ ] Add `CODE_OF_CONDUCT.md` + `CONTRIBUTING.md` at the repo root (the public-facing `profile/README.md` is enough for now).
-- [ ] Decide whether `ssh` and `docker` go in this org or stay as inputs of `x-cmd/action`. (User said: make them actions. To do.)
+- [ ] Decide whether `ssh` and `docker` go in this org or stay as inputs of `x-cmd/action`. *(Done: shipped as standalone actions in this org. `x-cmd/action` still has them for backward compat.)*
 
 ## Open questions
 

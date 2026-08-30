@@ -16,6 +16,8 @@
 | --- | --- | --- |
 | [`x-cmd`](./x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`checkout`](./checkout) | 纯 shell `git checkout`。20 个 input，同 `actions/checkout` 表面。**不依赖 x-cmd** —— 只用 `git`、`ssh-agent`、`ssh-keyscan`。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ssh`](./ssh) | 纯 shell `ssh-agent` setup + `known_hosts` + 可选 key add。从 `x-cmd/action` 抽出。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`docker`](./docker) | 纯 shell `docker login` + `docker buildx init`。从 `x-cmd/action` 抽出。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ### Layer 2 — Common Functions
 

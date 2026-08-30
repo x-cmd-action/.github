@@ -16,6 +16,8 @@ Composable environment-setup actions. Each does one thing; pick what you need.
 | --- | --- | --- |
 | [`x-cmd`](./x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`checkout`](./checkout) | Pure-shell `git checkout`. 20 inputs, same surface as `actions/checkout`. **No x-cmd dep** — uses only `git`, `ssh-agent`, `ssh-keyscan`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ssh`](./ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`docker`](./docker) | Pure-shell `docker login` + `docker buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ### Layer 2 — Common Functions
 
