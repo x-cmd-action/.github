@@ -15,7 +15,7 @@ Actions that bring the runner close to a local dev environment. **Composable, mu
 | Action | Status | Purpose |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
-| [`this-repo`](https://github.com/x-cmd-action/this-repo) | ✅ shipped (v1) | clone trigger repo to `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache). Token-only, no SSH, no extras. |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | ✅ shipped (v1) | minimal clone trigger repo to `$GITHUB_WORKSPACE`. Token-only, no SSH, no extras. 6 inputs. |
 | [`ssh`](https://github.com/x-cmd-action/ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
 | [`docker`](https://github.com/x-cmd-action/docker) | ✅ shipped (v1) | docker login + buildx init |
 | [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file). Position-independent — no repo-scoped logic. |

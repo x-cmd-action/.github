@@ -15,17 +15,18 @@
 | Action | 说明 | 最新版 |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](https://github.com/x-cmd-action/checkout) | 纯 shell `git checkout`。20 个 input，同 `actions/checkout` 表面。**不依赖 x-cmd** —— 只用 `git`、`ssh-agent`、`ssh-keyscan`。可选 `gitconfig` input 用于 repo-scoped 配置（用 `[include]`）。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | 纯 shell 最精简 checkout：把触发 repo 克隆到 `$GITHUB_WORKSPACE`，用 runner 的 token。6 个 input。`checkout` 太重时用它。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ssh`](https://github.com/x-cmd-action/ssh) | 纯 shell `ssh-agent` setup + `known_hosts` + 可选 key add。从 `x-cmd/action` 抽出。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`docker`](https://github.com/x-cmd-action/docker) | 纯 shell `docker login` + `docker buildx init`。从 `x-cmd/action` 抽出。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | 纯 shell **全局** git config。默认设 `user.name`/`user.email`；`config` input 给 `~/.gitconfig` 加 `[include]`。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | 纯 shell **全局** git config。默认设 `user.name`/`user.email`；`config` input 给 `~/.gitconfig` 加 `[include]`。位置无关 —— 不提供 `local-config`（repo-scoped overlay 用 `checkout` / `this-repo`）。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ### Layer 2 — Common Functions
 
-自成体系的自动化。每个解决一个重复出现的 workflow 任务，底层是 Layer 1 + x-cmd 模块。
+更高阶的自动化。每个把 Layer 1 action（和 x-cmd 命令）组合成一个常用 workflow 任务。
 
 | Action | 说明 | 最新版 |
 | --- | --- | --- |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | 纯 shell `git checkout`。22 个 input，与 `actions/checkout@v4` 1:1 对齐 + 3 个 x-cmd 增强（`known-hosts-url`、`fetch-additional`、`local-config`）。用 `GIT_SSH_COMMAND` + temp 文件 + 硬编码 `github.com` 公钥（学 `actions/checkout`）。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | 跨平台同步 repo（GitHub ↔ Gitee ↔ Codeberg）。三种 list 来源、扇出并发。需要 x-cmd（用 `x gitb backup`）。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 更多计划中的 action（`ghwatch`、`ghissuereply`、`ghissuegold`、`webmonitor`、`hnmonitor`）—— 见[内部路线图](https://github.com/x-cmd-action/.github/blob/main/README.md)。
@@ -37,17 +38,25 @@
 │  你的 workflow                                       │
 └─────────────────┬───────────────────────────────────┘
                   │
-       ┌──────────┼──────────┐
-       ▼          ▼          ▼
-   x-cmd      checkout    gitmirror
-   (装)       (clone)     (同步)
+   ┌──────────────┼──────────────┐
+   ▼              ▼              ▼
+ x-cmd        this-repo      gitmirror
+ (装)         (clone 这个)   (同步)
+   │              │
+   │              ▼
+   │          checkout     ← Layer 2：完整 actions/checkout 对齐
+   │          (clone+more)
+   ▼
+ ssh, docker, gitconfig
+ (各加一项)
 ```
 
 - **`x-cmd`** —— 装 x-cmd。想要 `x` 可用时用。
-- **`checkout`** —— 把 repo 克隆进 workspace。不想引 Node.js 时替代 `actions/checkout`。
-- **`gitmirror`** —— 跨平台单向复制。在 Gitee/Codeberg 维护镜像时用。
+- **`this-repo`** —— 最精简 clone 到 `$GITHUB_WORKSPACE`。`checkout` 太重时用它。
+- **`checkout`** —— 完整 `actions/checkout` 对齐的 clone（SSH、sparse、filter、fetch-additional、known-hosts-url、gitconfig）。需要这些时用这个。
+- **`gitmirror`** —— 跨平台单向复制。
 
-这三个是同级 —— 需要哪个就拿哪个，可以自由组合。
+这些是同级 —— 需要哪个就拿哪个，可以自由组合。
 
 [`x-cmd/action`](https://github.com/x-cmd/action) 在独立仓库，是**不同的工具**：它装 x-cmd 并且**默认你会用 x-cmd 命令做剩下的事**（`x gitb`、`x ws` 等）—— 即"1 action + x-cmd 命令 = 完整 CI"。整个 CI 是 x-cmd 驱动的时候用它。
 

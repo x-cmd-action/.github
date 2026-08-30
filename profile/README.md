@@ -15,7 +15,7 @@ Composable environment-setup actions. Each does one thing; pick what you need.
 | Action | Description | Latest |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`this-repo`](https://github.com/x-cmd-action/this-repo) | Clone the trigger repo into `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache layout). Pure shell, GitHub-token only. The minimal "give me this repo" action. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | Pure-shell minimal checkout: clone trigger repo into `$GITHUB_WORKSPACE` using the runner's token. 6 inputs. Use when `checkout` is overkill. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ssh`](https://github.com/x-cmd-action/ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`docker`](https://github.com/x-cmd-action/docker) | Pure-shell `docker login` + `docker buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. Position-independent — no `local-config` here (use `checkout`/`this-repo` for repo-scoped overlay). | ![v1](https://img.shields.io/badge/v1-stable-green) |
@@ -44,7 +44,7 @@ More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor
  (install)    (clone this)   (sync)
    │              │
    │              ▼
-   │          checkout     ← Layer 2: full actions/checkout
+   │          checkout     ← Layer 2: full actions/checkout parity
    │          (clone+more)
    ▼
  ssh, docker, gitconfig
@@ -52,8 +52,8 @@ More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor
 ```
 
 - **`x-cmd`** — install x-cmd. Use when you want `x` available.
-- **`this-repo`** — clone the trigger repo to `~/.x-repo/<host>/<owner>/<repo>` (x-cmd local cache). Minimal — use this by default.
-- **`checkout`** — clone with full `actions/checkout` parity (SSH, sparse, filter, etc.). Use when `this-repo` is too thin.
+- **`this-repo`** — minimal clone to `$GITHUB_WORKSPACE`. Use when `checkout` is overkill.
+- **`checkout`** — full `actions/checkout` parity (SSH, sparse, filter, fetch-additional, known-hosts-url, gitconfig). Use when you need those.
 - **`gitmirror`** — periodic one-way replication across platforms.
 
 These are peers — pick whichever you need, compose freely.
