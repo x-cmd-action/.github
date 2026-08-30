@@ -15,9 +15,10 @@ Actions that bring the runner close to a local dev environment. **Composable, mu
 | Action | Status | Purpose |
 | --- | --- | --- |
 | [`x-cmd`](../x-cmd) | ✅ shipped (v1) | install x-cmd into `~/.x-cmd.root/` |
-| [`checkout`](../checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep) |
+| [`checkout`](../checkout) | ✅ shipped (v1) | pure-shell `git checkout` (no x-cmd dep; repo-scoped `gitconfig` via `[include]`) |
 | [`ssh`](../ssh) | ✅ shipped (v1) | ssh-agent + known_hosts + key add |
 | [`docker`](../docker) | ✅ shipped (v1) | docker login + buildx init |
+| [`gitconfig`](../gitconfig) | ✅ shipped (v1) | global git config (name/email + `[include]` for config file) |
 
 **Why this layer exists.** x-cmd `gitb backup` requires ssh-keyscan. `x gh` requires a GitHub token. Most x-cmd-based actions need *some* of this wiring. Splitting them out lets users compose exactly what they need without paying for what they don't.
 
