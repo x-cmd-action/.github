@@ -6,11 +6,26 @@
 
 ## Actions
 
-| Action | 说明 | 需要 x-cmd？ | 最新版 |
-| --- | --- | --- | --- |
-| [`x-cmd`](./x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等、暴露 `outputs.root` 供下游链式用。 | — *(就是 x-cmd)* | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](./checkout) | 纯 shell `git checkout`。`actions/checkout` 的直接替代 —— 20 个 input，同名表面。**不需要 x-cmd** —— 只用 `git`、`ssh-agent`、`ssh-keyscan`。 | ❌ 不需要 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitmirror`](./gitmirror) | 跨平台 git repo 镜像（GitHub ↔ Gitee ↔ Codeberg）。三种 list 来源、扇出并发。内部调 `x gitb backup`。 | ✅ 需要 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+两层。Layer 1 让 runner 接近本地开发环境；Layer 2 是基于 Layer 1 构建的高阶自动化。
+
+### Layer 1 — Basic Setup
+
+可组合的环境配置 action。各做一件事，按需取用。
+
+| Action | 说明 | 最新版 |
+| --- | --- | --- |
+| [`x-cmd`](./x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`checkout`](./checkout) | 纯 shell `git checkout`。20 个 input，同 `actions/checkout` 表面。**不依赖 x-cmd** —— 只用 `git`、`ssh-agent`、`ssh-keyscan`。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+
+### Layer 2 — Common Functions
+
+自成体系的自动化。每个解决一个重复出现的 workflow 任务，底层是 Layer 1 + x-cmd 模块。
+
+| Action | 说明 | 最新版 |
+| --- | --- | --- |
+| [`gitmirror`](./gitmirror) | 跨平台同步 repo（GitHub ↔ Gitee ↔ Codeberg）。三种 list 来源、扇出并发。需要 x-cmd（用 `x gitb backup`）。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+
+更多计划中的 action（`ghwatch`、`ghissuereply`、`ghissuegold`、`webmonitor`、`hnmonitor`）—— 见[内部路线图](https://github.com/x-cmd-action/.github/blob/main/README.md)。
 
 ## 它们怎么配合
 

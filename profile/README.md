@@ -6,11 +6,26 @@ GitHub Actions for the [x-cmd](https://github.com/x-cmd/x-cmd) ecosystem. Every 
 
 ## Actions
 
-| Action | Description | Needs x-cmd? | Latest |
-| --- | --- | --- | --- |
-| [`x-cmd`](./x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent, exposes `outputs.root` for chaining. | — *(is x-cmd)* | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](./checkout) | Pure-shell `git checkout`. Drop-in alternative to `actions/checkout` — 20 inputs, same surface. **No x-cmd needed** — uses only `git`, `ssh-agent`, `ssh-keyscan`. | ❌ no | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitmirror`](./gitmirror) | Cross-platform git repo mirror (GitHub ↔ Gitee ↔ Codeberg). Three list-source styles, fan-out concurrency. Calls `x gitb backup` internally. | ✅ yes | ![v1](https://img.shields.io/badge/v1-stable-green) |
+Two layers. Layer 1 actions bring the runner close to a local dev environment; Layer 2 actions are higher-level automations built on top.
+
+### Layer 1 — Basic Setup
+
+Composable environment-setup actions. Each does one thing; pick what you need.
+
+| Action | Description | Latest |
+| --- | --- | --- |
+| [`x-cmd`](./x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`checkout`](./checkout) | Pure-shell `git checkout`. 20 inputs, same surface as `actions/checkout`. **No x-cmd dep** — uses only `git`, `ssh-agent`, `ssh-keyscan`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+
+### Layer 2 — Common Functions
+
+Self-contained automations. Each does one recurring workflow job, built on Layer 1 + x-cmd modules.
+
+| Action | Description | Latest |
+| --- | --- | --- |
+| [`gitmirror`](./gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. Three list-source styles, fan-out concurrency. Requires x-cmd (uses `x gitb backup`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
+
+More planned (`ghwatch`, `ghissuereply`, `ghissuegold`, `webmonitor`, `hnmonitor`) — see the [internal roadmap](https://github.com/x-cmd-action/.github/blob/main/README.md).
 
 ## How they fit together
 
