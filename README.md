@@ -51,6 +51,25 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 - **`profile/README.md`** is the public surface; this file is the maintainer's view.
 - **Scope-appropriate naming.** Standalone actions in this org use **unprefixed** input names (`username`, `password`, `ssh-key`, `buildx-init`). The action's own scope is the disambiguator. Prefixes (`docker_username`, `ssh_key`) only appear in `x-cmd/action`, which has 17 inputs spanning multiple domains and needs them to disambiguate. When in doubt: name an input as if it were the only one in scope.
 
+## FAQ
+
+### Why pure shell, not Node.js?
+
+The Node.js-based GitHub Actions ecosystem has a maintenance pattern that's easy to underestimate: actions get "stale" not because their logic changes, but because **Node.js itself is a moving target**. Node 16 → 18 → 20 → 22 → 24 each broke something. `actions/checkout`, `actions/setup-node`, etc. ship regular releases that are mostly "bump the Node version", patch deprecation warnings, fix ESM/CJS interop. Users see constant releases and assume something real changed; the change is usually "this action now runs on Node 24 instead of Node 20".
+
+Pure shell sidesteps this entirely. `bash` is bash. POSIX tools (`git`, `ssh`, `curl`, `grep`, `sed`, `awk`) don't release major versions every six months. A shell action written in 2020 still works on a runner in 2030, because the interpreter and the tools are stable on a timescale measured in decades.
+
+Practical consequences:
+
+- **No version churn.** `v1` means `v1`. We don't bump a Node runtime.
+- **Smaller tarball.** ~3 KB shell vs ~few MB bundled JS. Faster checkout, faster failure modes.
+- **Trivial to audit.** Read the script, see exactly what runs. No transpiled output, no `node_modules`, no `@actions/*` namespace to learn.
+- **Trivial to fork / inline.** Want to customize? Copy the lib shell file into your own action and tweak it.
+
+The trade-off: we don't get to use Node libraries (`@actions/core`, `@actions/github`, `octokit`, …). For our scope — `git`, `ssh`, `docker`, `curl`, `jq` from coreutils — that's fine. If we ever needed an LLM SDK or a complex HTTP client, we'd delegate to x-cmd (`x http`, `x curl`) rather than pull in a Node dep.
+
+The org's principle: **ship shell; lean on x-cmd for anything that would otherwise need a library.**
+
 ## Design Principle — Never Reimplement What x-cmd Does
 
 x-cmd ships hundreds of primitives (`x gitb backup`, `x gh`, `x repo`, `x eget`, `x env use`, `x curl`, `x sysinfo`, etc.) that have been iterated on for years. Layer 2 actions in this org **delegate to x-cmd**, they do not reimplement.
