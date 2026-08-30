@@ -6,11 +6,11 @@
 
 ## Actions
 
-| Action | 说明 | 最新版 |
-| --- | --- | --- |
-| [`x-cmd`](./x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等、暴露 `outputs.root` 供下游链式用。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`checkout`](./checkout) | 纯 shell `git checkout`。`actions/checkout` 的直接替代 —— 20 个 input，同名表面。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitmirror`](./gitmirror) | 跨平台 git repo 镜像（GitHub ↔ Gitee ↔ Codeberg）。三种 list 来源、扇出并发。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| Action | 说明 | 需要 x-cmd？ | 最新版 |
+| --- | --- | --- | --- |
+| [`x-cmd`](./x-cmd) | 安装 x-cmd 到 `~/.x-cmd.root/`。单一职责、幂等、暴露 `outputs.root` 供下游链式用。 | — *(就是 x-cmd)* | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`checkout`](./checkout) | 纯 shell `git checkout`。`actions/checkout` 的直接替代 —— 20 个 input，同名表面。**不需要 x-cmd** —— 只用 `git`、`ssh-agent`、`ssh-keyscan`。 | ❌ 不需要 | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitmirror`](./gitmirror) | 跨平台 git repo 镜像（GitHub ↔ Gitee ↔ Codeberg）。三种 list 来源、扇出并发。内部调 `x gitb backup`。 | ✅ 需要 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 ## 它们怎么配合
 
@@ -19,18 +19,19 @@
 │  你的 workflow                                       │
 └─────────────────┬───────────────────────────────────┘
                   │
-       ┌──────────┼──────────┬──────────────┐
-       ▼          ▼          ▼              ▼
-   x-cmd      checkout    gitmirror     x-cmd/action
-   (只装      (clone      (同步         (全套 bootstrap：
-   x-cmd)     repo)       repos)         x-cmd + SSH + git
-                                          + docker + ws)
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+   x-cmd      checkout    gitmirror
+   (装)       (clone)     (同步)
 ```
 
-- **`x-cmd`** —— 只装 x-cmd。想要 `x` 可用、其它自己处理时用。
+- **`x-cmd`** —— 装 x-cmd。想要 `x` 可用时用。
 - **`checkout`** —— 把 repo 克隆进 workspace。不想引 Node.js 时替代 `actions/checkout`。
 - **`gitmirror`** —— 跨平台单向复制。在 Gitee/Codeberg 维护镜像时用。
-- **[`x-cmd/action`](https://github.com/x-cmd/action)** （兄弟仓库，不在这个 org）—— 全套 CI bootstrap。装 x-cmd + 接 SSH / git identity / docker / workspace / artifact，一站搞定。
+
+这三个是同级 —— 需要哪个就拿哪个，可以自由组合。
+
+[`x-cmd/action`](https://github.com/x-cmd/action) 在独立仓库，是**不同的工具**：它装 x-cmd 并且**默认你会用 x-cmd 命令做剩下的事**（`x gitb`、`x ws` 等）—— 即"1 action + x-cmd 命令 = 完整 CI"。整个 CI 是 x-cmd 驱动的时候用它。
 
 ## 约定
 
