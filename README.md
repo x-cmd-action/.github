@@ -44,6 +44,68 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 - **Apache 2.0** across the org.
 - **`profile/README.md`** is the public surface; this file is the maintainer's view.
 
+## Design Principle — Never Reimplement What x-cmd Does
+
+x-cmd ships hundreds of primitives (`x gitb backup`, `x gh`, `x repo`, `x eget`, `x env use`, `x curl`, `x sysinfo`, etc.) that have been iterated on for years. Layer 2 actions in this org **delegate to x-cmd**, they do not reimplement.
+
+### The rule
+
+> An action is a **thin wrapper around x-cmd commands**. It is not a shell reimplementation of x-cmd's logic.
+
+### Concretely
+
+**Do not** in your action's shell:
+
+- ❌ `git clone --bare` + `git push` — use `x gitb backup`
+- ❌ Custom GitHub API client — use `x gh`
+- ❌ Custom URL fetcher — use `x curl` (or `x http` / `x fetch`)
+- ❌ Custom JSON parser — use `x jq` / `x json`
+- ❌ Custom env manager — use `x env use <lang>`
+- ❌ Custom binary installer — use `x eget use`
+
+**Do** in your action's shell:
+
+- ✅ Parse inputs into a structure x-cmd understands
+- ✅ Wire up secrets / credentials (Layer 1 actions)
+- ✅ Call x-cmd with the parsed inputs
+- ✅ Format x-cmd output into GitHub-flavored outputs (markdown, `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`)
+- ✅ Implement GitHub Actions–specific glue (matrix, conditionals, env files)
+
+### Exceptions (where shell reimplementation is OK)
+
+- **LLM API calls** — x-cmd doesn't wrap OpenAI / Anthropic. Use `x curl` against the API directly.
+- **State across steps** — GitHub Actions has no built-in state, so use temp files / env vars.
+- **GitHub Actions native glue** — `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`, conditional `if:` expressions.
+
+For everything else, **call x-cmd**.
+
+### Why this matters
+
+| Aspect | Reimplementing | Delegating to x-cmd |
+| --- | --- | --- |
+| Code size | 5+ lines per primitive | 1 line per call |
+| Bug fixes | You maintain it | x-cmd maintainer fixes; all actions benefit |
+| Performance | Whatever you write | Whatever x-cmd is tuned to |
+| Behavior parity | Diverges from `x gitb backup` etc. | 100% matches local `x ...` |
+| Tests | You write them | x-cmd's tests cover it |
+
+### Anti-pattern example (gitmirror v0)
+
+```bash
+# WRONG — reimplemented what x gitb backup already does
+git clone --bare "$src" "$work/repo.git"
+cd "$work/repo.git"
+git remote add target "$dest"
+git push target --all --tags --force
+```
+
+### Right pattern (gitmirror v1)
+
+```bash
+# RIGHT — one line, delegates
+x gitb backup --force "$src" "$dest"
+```
+
 ## TODO
 
 ### Extract from `x-cmd/action`
