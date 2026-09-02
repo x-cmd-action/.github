@@ -7,6 +7,8 @@ Two reasons this org exists:
 1. **Wire up the runner like a local dev box.** Install x-cmd, configure git/ssh/docker, clone the repo. Composable, pick what you need.
 2. **Help maintainers triage GitHub-native artifacts (issues, PRs, comments, diffs).** Auto-label new issues, post a draft PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. The AI drafts; humans decide.
 
+**Design principle.** Recurring ops work lives in portable shell / Python / JS scripts (`x gitb backup`, `x gh`, `x ws`, …) — scripts you can run on your laptop, on a cron, on any CI. These actions are **thin wrappers around those scripts**, not opaque GitHub-Actions-only logic. When the workflow moves off GitHub, the work moves with it.
+
 [中文](./README.cn.md)
 
 ## Layer 1 — Wire up the runner like a laptop

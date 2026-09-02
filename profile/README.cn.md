@@ -7,6 +7,8 @@
 1. **把 runner 配置得跟本地开发机一样**。装 x-cmd、配 git/ssh/docker、clone repo。可组合,按需选用。
 2. **辅助维护者管理 GitHub 原生制品(issues、PRs、comments、diffs)**。自动给新 issue 打 label,每次 push 都发 PR review 草稿,生成每周 changelog,从已关闭 bug 提取 post-mortem。AI 出草稿,人类做决策。
 
+**设计原则**。可重复的运维活在可移植的 shell / Python / JS 脚本里(`x gitb backup`、`x gh`、`x ws` 等) —— 这些脚本你在笔记本、cron、任何 CI 上都能跑。这里的 actions 是 **那些脚本的薄包装**,不是只能在 GitHub Actions 里跑的黑盒逻辑。workflow 离开 GitHub,这些工作跟着走。
+
 [English](./README.md)
 
 ## Layer 1 — 把 runner 配成跟笔记本一样
