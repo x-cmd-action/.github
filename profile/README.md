@@ -5,7 +5,7 @@ GitHub Actions that bring the [x-cmd shell library](https://github.com/x-cmd/x-c
 Two reasons this org exists:
 
 1. **Wire up the runner like a local dev box.** Install x-cmd, configure git/ssh/docker, clone the repo. Composable, pick what you need.
-2. **Hand GitHub-native artifacts (issues, PRs, comments, diffs) to an LLM.** Auto-label new issues, post a draft PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. The AI is not a demo — it's the reason most users adopt this org.
+2. **Help maintainers triage GitHub-native artifacts (issues, PRs, comments, diffs).** Auto-label new issues, post a draft PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. The AI drafts; humans decide.
 
 [中文](./README.cn.md)
 
@@ -28,7 +28,7 @@ Two reasons this org exists:
 
 ## Layer 3 — AI toolkit (LLM via x-cmd's `x ai request`)
 
-Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, writes back via `x gh`. No AI SDK, no Node dep — the entire AI call is one `x ai request` line.
+Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, writes back via `x gh`. No AI SDK, no Node dep — the entire AI call is one `x ai request` line. **The AI drafts — the human decides.** Every Layer 3 output is a starting point a maintainer reviews and edits, not an autonomous agent pushing to `main`.
 
 | Action | What it does for you | Latest |
 | --- | --- | --- |
@@ -42,6 +42,56 @@ Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, wri
 | [`mneme`](https://github.com/x-cmd-action/mneme) | **AI memory layer.** Persists + retrieves LLM context across workflow runs. Lets `ai/review` on PR #123 remember what `ai/triage` said on issue #42. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 The full Layer 3 internals (per-action design notes, roadmap, story archive) live in the private [`mneme`](https://github.com/x-cmd-action/mneme) repo.
+
+## Quick examples
+
+Wire up the runner like a laptop:
+
+```yaml
+steps:
+  - uses: x-cmd-action/x-cmd@v1
+  - uses: x-cmd-action/this-repo@v1
+  - uses: x-cmd-action/gitconfig@v1
+    with:
+      email: bot@example.com
+```
+
+Auto-label a new issue (no AI token yet — set `MINIMAX_TOKEN` in repo secrets):
+
+```yaml
+on:
+  issues:
+    types: [opened]
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: x-cmd-action/ai/triage@v1
+        with: { model: minimax, apply-labels: 'true' }
+        env: { MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }} }
+```
+
+First-line responder that cites your FAQ when users mention `@x` (no AI token):
+
+```yaml
+on:
+  issue_comment:
+    types: [created]
+concurrency:
+  group: aireply
+  cancel-in-progress: false
+jobs:
+  reply:
+    if: github.event.sender.type != 'Bot'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: x-cmd-action/ai/reply@v1
+        with:
+          keyword: '@x'
+          reaction: eyes
+```
 
 ## How they fit together
 

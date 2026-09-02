@@ -5,7 +5,7 @@
 本组织存在的两个理由:
 
 1. **把 runner 配置得跟本地开发机一样**。装 x-cmd、配 git/ssh/docker、clone repo。可组合,按需选用。
-2. **把 GitHub 原生制品(issues、PRs、comments、diffs)交给 LLM**。自动给新 issue 打 label,每次 push 都发 PR review 草稿,生成每周 changelog,从已关闭 bug 提取 post-mortem。AI 不是 demo —— 是大多数用户采用本组织的原因。
+2. **辅助维护者管理 GitHub 原生制品(issues、PRs、comments、diffs)**。自动给新 issue 打 label,每次 push 都发 PR review 草稿,生成每周 changelog,从已关闭 bug 提取 post-mortem。AI 出草稿,人类做决策。
 
 [English](./README.md)
 
@@ -28,7 +28,7 @@
 
 ## Layer 3 — AI 工具集(LLM 走 x-cmd 的 `x ai request`)
 
-每个 Layer 3 action 用 `x gh` 读 GitHub 制品,问 `x ai request`,再用 `x gh` 写回去。无 AI SDK,无 Node 依赖 —— 整个 AI 调用就是一行 `x ai request`。
+每个 Layer 3 action 用 `x gh` 读 GitHub 制品,问 `x ai request`,再用 `x gh` 写回去。无 AI SDK,无 Node 依赖 —— 整个 AI 调用就是一行 `x ai request`。**AI 出草稿,人类定稿**。每个 Layer 3 的输出都是维护者审阅编辑的起点,不是直接推到 `main` 的自治 agent。
 
 | Action | 它能帮你做什么 | 最新版 |
 | --- | --- | --- |
@@ -42,6 +42,56 @@
 | [`mneme`](https://github.com/x-cmd-action/mneme) | **AI 记忆层**。跨 workflow run 持久化 + 检索 LLM context。让 PR #123 的 `ai/review` 记住 issue #42 的 `ai/triage` 说了什么。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 Layer 3 的全部内部细节(per-action 设计笔记、roadmap、story 归档)放在私有的 [`mneme`](https://github.com/x-cmd-action/mneme) repo。
+
+## 快速案例
+
+把 runner 配成跟笔记本一样:
+
+```yaml
+steps:
+  - uses: x-cmd-action/x-cmd@v1
+  - uses: x-cmd-action/this-repo@v1
+  - uses: x-cmd-action/gitconfig@v1
+    with:
+      email: bot@example.com
+```
+
+自动给新 issue 打 label(AI token 还没配的话先在 repo secrets 里加 `MINIMAX_TOKEN`):
+
+```yaml
+on:
+  issues:
+    types: [opened]
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: x-cmd-action/ai/triage@v1
+        with: { model: minimax, apply-labels: 'true' }
+        env: { MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }} }
+```
+
+监听 `@x` 触发,引用 FAQ 回复用户(不需要 AI token):
+
+```yaml
+on:
+  issue_comment:
+    types: [created]
+concurrency:
+  group: aireply
+  cancel-in-progress: false
+jobs:
+  reply:
+    if: github.event.sender.type != 'Bot'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: x-cmd-action/ai/reply@v1
+        with:
+          keyword: '@x'
+          reaction: eyes
+```
 
 ## 它们怎么配合
 
