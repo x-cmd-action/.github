@@ -4,9 +4,9 @@
 
 ## Audience & Purpose
 
-This org builds actions for **super individuals** (超级个体) — people running their own personal workflow pipelines on GitHub Actions. The actions here are designed to be composable and to make a fresh CI runner feel close to a local dev environment, so users can iterate on personal automation cheaply.
+This org builds actions for **super individuals** (超级个体) — people running their own personal workflow pipelines on GitHub Actions. The actions here are designed to be composable, to make a fresh CI runner feel close to a local dev environment, and — increasingly — to **let an AI act as a first-line maintainer** on the user's repo.
 
-We organize actions in two layers.
+We organize actions in three layers. Layers 1 and 2 are about getting the runner wired up correctly (SSH, git config, checkout, monitoring). **Layer 3 is about handing GitHub-native artifacts (issues, PRs, comments, diffs) to an LLM through x-cmd's `x ai request` interface** — auto-labeling new issues, citing the FAQ to answer user questions, posting a draft PR review on every push, extracting post-mortems from closed bugs. The AI is not a demo feature; it's the reason most users adopt this org.
 
 ## Layer 1 — Basic Setup
 
@@ -38,6 +38,73 @@ Self-contained automations built on Layer 1. Each solves one recurring workflow 
 | `webmonitor` | 🚧 TODO | generic URL/diff watcher |
 | `hnmonitor` | 🚧 TODO | HN top-stories monitor |
 
+## Layer 3 — AI Assist (built on Layer 1 + 2)
+
+The reason this org adopted x-cmd wasn't only for shell primitives. x-cmd also wraps the entire **AI provider landscape** behind a single stable interface — `x ai request --model <provider>` — and gives every AI action the same dependency-free, pure-shell on-ramp that Layer 1/2 actions already use.
+
+Layer 3 actions are **AI wrappers that operate on GitHub-native artifacts** (issues, PRs, comments, diffs). They are thin: each one reads the artifact via `x gh`, asks `x ai` to transform it, and writes the result back via `x gh`. Same delegation principle as Layer 2 — never reimplement what `x ai request` already does.
+
+| Action | Status | Purpose |
+| --- | --- | --- |
+| [`ai`](https://github.com/x-cmd-action/ai) | ✅ shipped (v1) | monorepo — seven AI sub-commands (`triage`, `reply`, `review`, `changelog`, `translate`, `spec`, `commit`). Each maps 1:1 to local `x ai <subcmd>`. |
+| [`mneme`](https://github.com/x-cmd-action/mneme) | ✅ shipped (v1) | AI memory layer — persist + retrieve LLM context across workflow runs. Default backend: GitHub Issue (zero cost on public repos). Used by Layer 3 actions to "remember" prior reviews / triage decisions. |
+
+### Concrete use cases (what Layer 3 actually does for users)
+
+The Layer 3 actions are not "AI demos" — each one solves a specific maintainer pain point that today is done manually or not at all.
+
+**1. Auto-label incoming issues** — when a new issue is opened, `ai/triage` reads the body + labels, asks the AI for `type / priority / area / labels / summary`, posts the summary as a comment, and applies the suggested labels. Maintainers stop spending the first 5 minutes of every issue on routing.
+
+```yaml
+on:
+  issues:
+    types: [opened]
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: x-cmd-action/ai/triage@v1
+        with: { model: minimax, apply-labels: 'true' }
+        env: { MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }} }
+```
+
+**2. Read the FAQ and answer user questions** — `ai/reply` watches for `@x` in issue/comment bodies. When triggered, it posts a reaction + reply. Combined with a curated FAQ in `README.md` / `docs/faq.md`, this becomes a cheap first-line responder: the bot cites the FAQ section that answers the question, and the user gets a useful response in seconds instead of waiting for a maintainer.
+
+**3. Auto-investigate incoming issues** — `ai/reply` + a custom prompt can be wired to ask the AI to read the issue + linked repo files + relevant past issues, and post a draft diagnosis ("this looks like the same root cause as #42, fixed in PR #55, line X of file Y"). Maintainers review the draft instead of starting from scratch.
+
+**4. PR code review on every push** — `ai/review` runs on `pull_request: opened / synchronize`, fetches the diff via `gh pr diff`, and posts a structured review (Security / Style / Suggestions / Summary). Cheap enough to run on every PR; accurate enough to catch obvious issues before a human reviews.
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: x-cmd-action/ai/review@v1
+        env: { MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }} }
+```
+
+**5. Conventional Commits enforcement** — `ai/commit` in `mode: check` validates that every commit in a PR conforms to [Conventional Commits](https://www.conventionalcommits.org/). When invalid commits are found, the AI suggests rewrites and posts them as a PR comment. Pairs naturally with `ai/changelog` — the cleaner the commit history, the better the auto-generated changelog.
+
+**6. Weekly community digest** — `ai/changelog` runs on `schedule: cron`, collects issues closed + PRs merged in the last N days, asks the AI to group them into `Features / Fixes / Performance / Docs / Other`, writes the result to `CHANGELOG.md` (or stdout for posting elsewhere). Zero-effort weekly update for users.
+
+**7. RFC + post-mortem extraction** — `ai/spec` in `mode: rfc` reads a feature request issue and produces a structured RFC (Summary / Motivation / Detailed Design / Alternatives / Drawbacks / Open Questions). In `mode: postmortem` it extracts the timeline + root cause + lessons from a closed bug. Maintainers get a draft; they edit, not write from scratch.
+
+**8. i18n on demand** — `ai/translate` reads `README.md`, translates to `target: zh`, writes `README.zh.md`. Markdown-aware — code blocks are preserved, URLs and proper nouns are kept. Useful for "I want a Chinese version of my README but I don't speak Chinese" workflows.
+
+### Why this is a layer, not just "AI features"
+
+- **Stable contract.** All Layer 3 actions share the same `MINIMAX_TOKEN` env convention, the same composite-action shape, and the same `x-cmd-action/x-cmd + x-cmd-action/this-repo` prefix. Users learn one pattern, get seven actions.
+- **Provider-agnostic.** `with: model: minimax | openai:gpt-4 | anthropic:claude-fable-5` — switching providers is an input change, not a rewrite. x-cmd's `x ai request` handles the routing.
+- **Memory cross-runs.** `mneme` lets `ai/review` on PR #123 remember what `ai/triage` said on issue #42 (the issue this PR closes). Without this, every AI run starts from zero context.
+- **Local-first.** Every Layer 3 action corresponds to a local `x ai <subcmd>` — try it on your laptop, ship it as a workflow. Same code path, same output.
+
 **Why `checkout` moved here.** It composes token/SSH/sparse/filter/identity into one action — that's exactly what Layer 2 is for (a recurring workflow job, built on Layer 1). Layer 1 has `this-repo` for users who just want "give me this repo, nothing fancy."
 
 **Why this layer exists.** Common functions can usually be expressed as a Layer 1 setup + an x-cmd script. We package them so users don't pay the maintenance cost of re-discovering the right x-cmd incantation each time. Internally each one is **a thin shell wrapper around x-cmd commands** — never a re-implementation.
@@ -66,9 +133,9 @@ Practical consequences:
 - **Trivial to audit.** Read the script, see exactly what runs. No transpiled output, no `node_modules`, no `@actions/*` namespace to learn.
 - **Trivial to fork / inline.** Want to customize? Copy the lib shell file into your own action and tweak it.
 
-The trade-off: we don't get to use Node libraries (`@actions/core`, `@actions/github`, `octokit`, …). For our scope — `git`, `ssh`, `docker`, `curl`, `jq` from coreutils — that's fine. If we ever needed an LLM SDK or a complex HTTP client, we'd delegate to x-cmd (`x http`, `x curl`) rather than pull in a Node dep.
+The trade-off: we don't get to use Node libraries (`@actions/core`, `@actions/github`, `octokit`, …). For our scope — `git`, `ssh`, `docker`, `curl`, `jq` from coreutils — that's fine. When we needed an LLM SDK or a complex HTTP client, we did not pull in a Node dep — we delegated to x-cmd (`x http`, `x curl`, `x ai request`). Layer 3 actions are the proof: they are pure shell that delegate the entire AI call to one `x ai request` line.
 
-The org's principle: **ship shell; lean on x-cmd for anything that would otherwise need a library.**
+The org's principle: **ship shell; lean on x-cmd for anything that would otherwise need a library — including an LLM SDK.**
 
 ## Design Principle — Never Reimplement What x-cmd Does
 
@@ -152,6 +219,18 @@ x gitb backup --force "$src" "$dest"
 - [ ] **`x-cmd-action/ghissuegold`** — given a closed issue (or thread), summarize the accepted answer / fix into a reusable snippet. Output to a knowledge-base file via PR.
 - [ ] **`x-cmd-action/webmonitor`** — generic: take a list of URLs, fetch, diff against cached snapshot, open an issue if changed.
 - [ ] **`x-cmd-action/hnmonitor`** — Hacker News top stories monitor. Uses `x web` or `x curl` to hit the HN API, output new stories as a digest.
+
+### Layer 3 (AI) — done
+
+- [x] **`x-cmd-action/ai`** — monorepo with seven sub-commands (`triage`, `reply`, `review`, `changelog`, `translate`, `spec`, `commit`), each mapping 1:1 to local `x ai <subcmd>`. — **Done, v1 shipped.**
+- [x] **`x-cmd-action/mneme`** — AI memory layer (store / retrieve / search across workflow runs; default backend: GitHub Issue). — **Done, v1 shipped.**
+
+### Future Layer 3 ideas
+
+- [ ] **`ai/rank`** — rank incoming issues by "user pain" estimate (bug frequency × severity × user impact) so the maintainer triages by urgency, not arrival order.
+- [ ] **`ai/reply-context`** — pull relevant snippets from `docs/` / `README.md` / past closed issues, then have the bot cite them when answering. Improves over plain `ai/reply` for repos with rich docs.
+- [ ] **`ai/security-scan`** — diff-aware secret / dependency-vuln scanner that explains findings in plain language and posts as PR comment.
+- [ ] **`ai/coverage`** — for projects with a test suite, suggest missing test cases by reading untested source files.
 
 ### Org-level
 
