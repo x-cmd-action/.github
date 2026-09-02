@@ -32,7 +32,7 @@
 | Action | 它能帮你做什么 | 最新版 |
 | --- | --- | --- |
 | [`ai/triage`](https://github.com/x-cmd-action/ai/tree/main/triage) | **自动给新 issue 打 label**。读正文 + 已有 labels,AI 返回 `type / priority / area / labels / summary`,bot 发 summary 并贴建议的 labels。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **一线应答**。监听 issue/comment 正文里的 `@x`,加 reaction 并发回复。结合 FAQ,bot 引用 FAQ 中回答问题的章节。**不需要 AI token。** | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **一线应答**。监听 issue/comment 正文里的 `@x`,加 reaction 并发回复。默认发固定回复;设 `use_ai: 'true'` 后通过 `x agent request` 生成回复(根据 API key env 自动识别 minimax / deepseek / openai)。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/review`](https://github.com/x-cmd-action/ai/tree/main/review) | **每次 push 都 PR review**。用 `gh pr diff` 拿 diff,AI 返回 Security / Style / Suggestions / Summary,bot 发结构化评论。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/changelog`](https://github.com/x-cmd-action/ai/tree/main/changelog) | **每周社区摘要**。`schedule: cron`。收集过去 N 天关闭的 Issue + 合并的 PR,AI 按 `Features / Fixes / Performance / Docs / Other` 分组,写 `CHANGELOG.md`。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **按需 i18n**。读 Markdown 文件,翻译到目标语言。Markdown 友好 —— code block 不动。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
@@ -70,7 +70,7 @@ jobs:
         env: { MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }} }
 ```
 
-监听 `@x` 触发,引用 FAQ 回复用户(不需要 AI token):
+监听 `@x` 触发,AI 生成回复(reply action 默认静态回复,设 `use_ai: 'true'` 走 LLM;先把 `MINIMAX_TOKEN` 加到 repo secrets):
 
 ```yaml
 on:
@@ -89,6 +89,10 @@ jobs:
         with:
           keyword: '@x'
           reaction: eyes
+          use_ai: 'true'           # 通过 x agent request 生成回复
+          provider: minimax
+        env:
+          MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }}
 ```
 
 ## 它们怎么配合

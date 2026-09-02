@@ -32,7 +32,7 @@ Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, wri
 | Action | What it does for you | Latest |
 | --- | --- | --- |
 | [`ai/triage`](https://github.com/x-cmd-action/ai/tree/main/triage) | **Auto-label new issues.** Reads body + existing labels, AI returns `type / priority / area / labels / summary`, bot posts summary and applies labels. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **First-line responder.** Watches for `@x` in issue/comment bodies, posts a reaction + reply. Combined with a FAQ, the bot cites the FAQ section that answers. **No AI token required.** | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **First-line responder.** Watches for `@x` in issue/comment bodies, posts a reaction + reply. Static reply by default; set `use_ai: 'true'` to generate the reply via `x agent request` (auto-detects minimax / deepseek / openai from API key env vars). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/review`](https://github.com/x-cmd-action/ai/tree/main/review) | **PR review on every push.** Fetches the PR diff via `gh pr diff`, AI returns Security / Style / Suggestions / Summary, bot posts a structured comment. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/changelog`](https://github.com/x-cmd-action/ai/tree/main/changelog) | **Weekly community digest.** `schedule: cron`. Collects issues closed + PRs merged in the last N days, AI groups into `Features / Fixes / Performance / Docs / Other`, writes `CHANGELOG.md`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **i18n on demand.** Reads a Markdown file, translates to a target language. Markdown-aware — code blocks preserved. | ![v1](https://img.shields.io/badge/v1-stable-green) |
@@ -89,6 +89,10 @@ jobs:
         with:
           keyword: '@x'
           reaction: eyes
+          use_ai: 'true'           # generate reply via x agent request instead of static
+          provider: minimax
+        env:
+          MINIMAX_TOKEN: ${{ secrets.MINIMAX_TOKEN }}
 ```
 
 ## How they fit together
