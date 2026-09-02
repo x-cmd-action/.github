@@ -52,8 +52,16 @@ Layer 3 actions 是 **对 GitHub 原生制品(issues、PRs、comments、diffs)�
 
 | Action | 状态 | 用途 |
 | --- | --- | --- |
-| [`ai`](https://github.com/x-cmd-action/ai) | ✅ shipped (v1) | monorepo — 七个 AI 子命令(`triage`、`reply`、`review`、`changelog`、`translate`、`spec`、`commit`)。每个与本地 `x ai <subcmd>` 一一对应。 |
-| [`mneme`](https://github.com/x-cmd-action/mneme) | ✅ shipped (v1) | AI 记忆层 — 跨 workflow run 持久化与检索 LLM context。默认 backend:GitHub Issue(公开 repo 零成本)。Layer 3 actions 用来"记住"之前的 review / triage 决策。 |
+| Action | 状态 | 用途 |
+| --- | --- | --- |
+| [`ai/triage`](https://github.com/x-cmd-action/ai/triage@v1) | ✅ shipped (v1) | **自动路由新 issue**。读新 issue 的正文 + 已有 labels,问 AI 要 `type / priority / area / labels / summary`,把 summary 发评论,把建议的 labels 贴上去。帮维护者省下每个 issue 开头的 5 分钟。 |
+| [`ai/reply`](https://github.com/x-cmd-action/ai/reply@v1) | ✅ shipped (v1) | **一线应答**。监听 issue/comment 正文里的 `@x`(严格词边界,可配置),加 reaction 并发固定回复。结合 `README.md` / `docs/` 里的 FAQ,bot 可以引用 FAQ 中回答问题的章节。**不需要 AI token。** |
+| [`ai/review`](https://github.com/x-cmd-action/ai/review@v1) | ✅ shipped (v1) | **每次 push 都 PR review**。用 `gh pr diff` 拿 diff,问 AI 要 Security / Style / Suggestions / Summary,发结构化评论。便宜到每个 PR 都能跑;也准到能在人类 reviewer 之前抓明显问题。 |
+| [`ai/changelog`](https://github.com/x-cmd-action/ai/changelog@v1) | ✅ shipped (v1) | **每周社区摘要**。在 `schedule: cron` 触发。收集过去 N 天关闭的 Issue + 合并的 PR,让 AI 按 `Features / Fixes / Performance / Docs / Other` 分组,写 `CHANGELOG.md`。零成本的每周更新。 |
+| [`ai/translate`](https://github.com/x-cmd-action/ai/translate@v1) | ✅ shipped (v1) | **按需 i18n**。读 Markdown 文件,翻译到目标语言,写出去。Markdown 友好 — code block 不动,URL 和专有名词保留。适合"我不懂中文,但想要 README 的中文版"。 |
+| [`ai/spec`](https://github.com/x-cmd-action/ai/spec@v1) | ✅ shipped (v1) | **RFC + post-mortem 草稿**。`mode: rfc` 读 feature request issue,产出结构化 RFC(Summary / Motivation / Detailed Design / Alternatives / Drawbacks / Open Questions)。`mode: postmortem` 从已关闭 bug 提取时间线 + 根因 + 教训。维护者拿到草稿;他们改,不是从零写。 |
+| [`ai/commit`](https://github.com/x-cmd-action/ai/commit@v1) | ✅ shipped (v1) | **Conventional Commits 强制**。`mode: check` 校验 PR 里每条 commit 是否符合规范,不合规时给重写建议。`mode: generate` 从 staged diff 写一条合规 commit message。跟 `ai/changelog` 是天生搭档 — 历史越干净,自动 changelog 越好。 |
+| [`mneme`](https://github.com/x-cmd-action/mneme) | ✅ shipped (v1) | **AI 记忆层**。跨 workflow run 持久化 + 检索 LLM context。默认 backend:GitHub Issue(公开 repo 零成本)。让 PR #123 的 `ai/review` 记住 issue #42(这个 PR 关闭的那个)的 `ai/triage` 说了什么 — 没有 `mneme`,每个 Layer 3 action 都从零 context 开始。 |
 
 ### 具体场景(Layer 3 究竟能干什么)
 
