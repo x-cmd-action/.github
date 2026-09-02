@@ -38,9 +38,8 @@ Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, wri
 | [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **i18n on demand.** Reads a Markdown file, translates to a target language. Markdown-aware — code blocks preserved. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/spec`](https://github.com/x-cmd-action/ai/tree/main/spec) | **RFC + post-mortem drafts.** `mode: rfc` or `mode: postmortem`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/commit`](https://github.com/x-cmd-action/ai/tree/main/commit) | **Conventional Commits enforcement.** `mode: check` validates PR commits; `mode: generate` writes a compliant message. Pairs with `ai/changelog`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`mneme`](https://github.com/x-cmd-action/mneme) | **AI memory layer.** Persists + retrieves LLM context across workflow runs. Lets `ai/review` on PR #123 remember what `ai/triage` said on issue #42. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
-The full Layer 3 internals (per-action design notes, roadmap, story archive) live in the private [`mneme`](https://github.com/x-cmd-action/mneme) repo.
+Cross-run memory (so `ai/review` can recall what `ai/triage` said on the linked issue) is handled internally — Layer 3 users get useful drafts without wiring it up.
 
 ## Quick examples
 
@@ -124,8 +123,8 @@ For Layer 3 (AI):
                   │
         ┌─────────┼─────────┐
         ▼                   ▼
-   x ai request     x mneme store/retrieve
-   (call LLM)      (cross-run memory)
+   x ai request     cross-run memory
+   (call LLM)      (handled internally)
         │                   │
         └─────────┬─────────┘
                   ▼
@@ -136,7 +135,7 @@ For Layer 3 (AI):
 - **`this-repo`** — minimal clone to `$GITHUB_WORKSPACE`. Use when `checkout` is overkill.
 - **`checkout`** — full `actions/checkout` parity (SSH, sparse, filter, fetch-additional, known-hosts-url, gitconfig). Use when you need those.
 - **`gitmirror`** — periodic one-way replication across platforms.
-- **`ai/*`** — auto-label, first-line reply, PR review, weekly changelog, i18n, RFC drafts, commit enforcement. Compose with `mneme` for cross-run memory.
+- **`ai/*`** — auto-label, first-line reply, PR review, weekly changelog, i18n, RFC drafts, commit enforcement. Cross-run memory is handled internally; users don't wire it up.
 
 These are peers — pick whichever you need, compose freely.
 
@@ -165,4 +164,4 @@ For a new Layer 3 sub-command, instead add it to `x-cmd-action/ai/<subname>/` an
 - [x-cmd/action](https://github.com/x-cmd/action) — the full CI bootstrap (sibling, not in this org).
 - [x-cmd](https://github.com/x-cmd/x-cmd) — the underlying shell library.
 - [x-cmd/get](https://github.com/x-cmd/get) — x-cmd installer.
-- [mneme](https://github.com/x-cmd-action/mneme) — private org-wide memory + design notes (Layer 3 internals live here).
+- (no public cross-run memory action — handled inside Layer 3)

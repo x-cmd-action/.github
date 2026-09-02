@@ -38,9 +38,8 @@
 | [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **按需 i18n**。读 Markdown 文件,翻译到目标语言。Markdown 友好 —— code block 不动。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/spec`](https://github.com/x-cmd-action/ai/tree/main/spec) | **RFC + post-mortem 草稿**。`mode: rfc` 或 `mode: postmortem`。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/commit`](https://github.com/x-cmd-action/ai/tree/main/commit) | **Conventional Commits 强制**。`mode: check` 校验 PR commits;`mode: generate` 写合规 commit message。跟 `ai/changelog` 是搭档。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`mneme`](https://github.com/x-cmd-action/mneme) | **AI 记忆层**。跨 workflow run 持久化 + 检索 LLM context。让 PR #123 的 `ai/review` 记住 issue #42 的 `ai/triage` 说了什么。 | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
-Layer 3 的全部内部细节(per-action 设计笔记、roadmap、story 归档)放在私有的 [`mneme`](https://github.com/x-cmd-action/mneme) repo。
+跨 run 记忆(让 `ai/review` 记住链接 issue 上 `ai/triage` 说了什么)在内部处理 —— Layer 3 用户不用自己接,直接拿有用草稿。
 
 ## 快速案例
 
@@ -124,8 +123,8 @@ Layer 3 (AI) 是这样:
                   │
         ┌─────────┼─────────┐
         ▼                   ▼
-   x ai request     x mneme store/retrieve
-   (call LLM)      (cross-run memory)
+   x ai request     跨 run 记忆
+   (call LLM)      (内部处理)
         │                   │
         └─────────┬─────────┘
                   ▼
@@ -136,7 +135,7 @@ Layer 3 (AI) 是这样:
 - **`this-repo`** —— 最精简 clone 到 `$GITHUB_WORKSPACE`。`checkout` 太重时用它。
 - **`checkout`** —— 完整 `actions/checkout` 对齐的 clone(SSH、sparse、filter、fetch-additional、known-hosts-url、gitconfig)。需要这些时用这个。
 - **`gitmirror`** —— 跨平台单向复制。
-- **`ai/*`** —— 自动 label、一线 reply、PR review、每周 changelog、i18n、RFC 草稿、commit 强制。配合 `mneme` 实现跨 run 记忆。
+- **`ai/*`** —— 自动 label、一线 reply、PR review、每周 changelog、i18n、RFC 草稿、commit 强制。跨 run 记忆内部处理,用户不用接。
 
 这些是同级 —— 需要哪个就拿哪个,可以自由组合。
 
@@ -165,4 +164,4 @@ Layer 3 (AI) 是这样:
 - [x-cmd/action](https://github.com/x-cmd/action) —— 全套 CI bootstrap(兄弟仓库,不在这 org)
 - [x-cmd](https://github.com/x-cmd/x-cmd) —— 底层 shell 库
 - [x-cmd/get](https://github.com/x-cmd/get) —— x-cmd 安装器
-- [mneme](https://github.com/x-cmd-action/mneme) —— 私有组织级记忆 + 设计笔记(Layer 3 内部细节在这里)
+- (无对外公开的跨 run 记忆 action —— 内部处理)
