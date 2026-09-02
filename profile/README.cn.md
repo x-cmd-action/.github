@@ -1,10 +1,11 @@
 # x-cmd-action
 
-把 [x-cmd shell 库](https://github.com/x-cmd/x-cmd)(以及它包装的 AI 工具集)带进 CI runner 的 GitHub Actions。纯 shell —— 无 Node.js、无 bundled JS、无嵌套 action 依赖。
+将 [x-cmd shell 库](https://github.com/x-cmd/x-cmd)的能力。以及它包装的 AI 工具集带进 GitHub Actions。
 
-这些 actions 把 runner 配置好 —— 装 x-cmd、配 git/ssh/docker、clone repo,按需选用 —— 让可重复的运维活能真正跑起来。同时它们辅助维护者管理 GitHub 原生制品(自动给新 issue 打 label,每次 push 发 PR review 草稿,生成每周 changelog,从已关闭 bug 提取 post-mortem)。**AI 出草稿,人类做决策。**
+1. 纯 shell —— 无 Node.js、无 bundled JS、无嵌套 action 依赖。避免 nodejs python 及依赖库的版本升级带来的 action 版本频繁升级。
+2. 这些 actions 把 runner 配置好 —— 装 x-cmd、配 git/ssh/docker、clone repo。真正可重复的流程代码，采用 shell(x-cmd), nodejs, python 等不依赖 github action部件方式来构建。
+3. 安全轻便使用 AI 辅助维护者管理 GitHub 项目 -- 自动给新 issue 打 label,每次 push 发 PR review 草稿,生成每周 changelog,从已关闭 bug 提取 post-mortem)。**AI 出草稿,人类做决策。**
 
-**设计原则**。可重复的运维活在可移植的 shell / Python / JS 脚本里(`x gitb backup`、`x gh`、`x ws` 等) —— 这些脚本你在笔记本、cron、任何 CI 上都能跑。这里的 actions 是 **那些脚本的薄包装**,不是只能在 GitHub Actions 里跑的黑盒逻辑。workflow 离开 GitHub,这些工作跟着走。
 
 [English](./README.md)
 
@@ -158,6 +159,12 @@ Layer 3 (AI) 是这样:
 4. 提 PR
 
 加 Layer 3 子命令时,改加到 `x-cmd-action/ai/<subname>/` 并在 Layer 3 表格里 link。
+
+## FAQ
+
+### 为何鼓励用 shell/nodejs/python 编写流程，而不是用 github 的 action.yml 来组合 ？
+
+可重复的运维活在可移植的 shell / Python / JS 脚本里(`x gitb backup`、`x gh`、`x ws` 等) —— 这些脚本你在笔记本、cron、任何 CI 上都能跑。这里的 actions 是 **那些脚本的薄包装**,不是只能在 GitHub Actions 里跑的黑盒逻辑。workflow 离开 GitHub,这些工作跟着走。
 
 ## 相关链接
 
