@@ -1,10 +1,10 @@
 # x-cmd-action
 
-GitHub Actions that bring the [x-cmd shell library](https://github.com/x-cmd/x-cmd) (and the AI toolkit wrapped by it) into CI runners. Pure shell — no Node.js, no bundled JS, no nested action dependencies.
+Bring the [x-cmd shell library](https://github.com/x-cmd/x-cmd) (and the AI toolkit it wraps) into GitHub Actions.
 
-These actions set the runner up so recurring ops work can actually run — install x-cmd, configure git/ssh/docker, clone the repo, on demand. And they help maintainers triage GitHub-native artifacts (auto-label new issues, draft a PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs). **The AI drafts; humans decide.**
-
-**Design principle.** Recurring ops work lives in portable shell / Python / JS scripts (`x gitb backup`, `x gh`, `x ws`, …) — scripts you can run on your laptop, on a cron, on any CI. These actions are **thin wrappers around those scripts**, not opaque GitHub-Actions-only logic. When the workflow moves off GitHub, the work moves with it.
+1. **Pure shell** — no Node.js, no bundled JS, no nested action dependencies. Avoids the Node/Python/library-version churn that forces frequent action version bumps.
+2. **Recurring ops in portable shell / Node.js / Python scripts.** The actions wire up the runner — install x-cmd, configure git/ssh/docker, clone the repo. The actual workflow logic lives in `x gitb backup`, `x gh`, `x ws`, … — scripts that run on your laptop, on a cron, on any CI. When the workflows moves off GitHub, the work moves with it.
+3. **Safe, lightweight AI assist for maintainers.** Auto-label new issues, draft a PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. **The AI drafts; humans decide.**
 
 [中文](./README.cn.md)
 
@@ -158,6 +158,12 @@ These are peers — pick whichever you need, compose freely.
 4. Submit a PR
 
 For a new Layer 3 sub-command, instead add it to `x-cmd-action/ai/<subname>/` and link it from the Layer 3 table.
+
+## FAQ
+
+### Why shell / Node.js / Python for workflow logic, instead of composing `action.yml`?
+
+Recurring ops work lives in portable shell / Python / JS scripts (`x gitb backup`, `x gh`, `x ws`, …) — scripts you can run on your laptop, on a cron, on any CI. These actions are **thin wrappers around those scripts**, not opaque GitHub-Actions-only logic. When the workflow moves off GitHub, the work moves with it.
 
 ## Related
 
