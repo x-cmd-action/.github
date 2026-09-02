@@ -1,50 +1,45 @@
 # x-cmd-action
 
-GitHub Actions for the [x-cmd](https://github.com/x-cmd/x-cmd) ecosystem. Every action in this org is **pure shell** — no Node.js runtime, no bundled JS, no nested action dependencies. Shell over Node.js on purpose: bash and coreutils don't release major versions every six months the way Node.js does, so a `v1` action written today still works on a runner in 2030.
+GitHub Actions that bring the [x-cmd shell library](https://github.com/x-cmd/x-cmd) (and the AI toolkit wrapped by it) into CI runners. Pure shell — no Node.js, no bundled JS, no nested action dependencies.
 
-The org also exposes an **AI toolkit** — Layer 3 actions that hand GitHub-native artifacts (issues, PRs, comments, diffs) to an LLM through x-cmd's `x ai request` interface. Auto-label new issues, post a draft PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. The AI is not a demo — it's the reason most users adopt this org.
+Two reasons this org exists:
+
+1. **Wire up the runner like a local dev box.** Install x-cmd, configure git/ssh/docker, clone the repo. Composable, pick what you need.
+2. **Hand GitHub-native artifacts (issues, PRs, comments, diffs) to an LLM.** Auto-label new issues, post a draft PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs. The AI is not a demo — it's the reason most users adopt this org.
 
 [中文](./README.cn.md)
 
-## Actions
-
-Three layers. Layer 1 brings the runner close to a local dev environment. Layer 2 builds higher-level automations on top. **Layer 3 hands GitHub-native artifacts to an LLM** through `x ai request`.
-
-### Layer 1 — Basic Setup
-
-Composable environment-setup actions. Each does one thing; pick what you need.
+## Layer 1 — Wire up the runner like a laptop
 
 | Action | Description | Latest |
 | --- | --- | --- |
 | [`x-cmd`](https://github.com/x-cmd-action/x-cmd) | Install x-cmd into `~/.x-cmd.root/`. Single-purpose, idempotent. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`this-repo`](https://github.com/x-cmd-action/this-repo) | Pure-shell minimal checkout: clone trigger repo into `$GITHUB_WORKSPACE` using the runner's token. 6 inputs. Use when `checkout` is overkill. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ssh`](https://github.com/x-cmd-action/ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + optional key add. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`docker`](https://github.com/x-cmd-action/docker) | Pure-shell `docker login` + `buildx init`. Extracted from `x-cmd/action`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config. Default sets `user.name`/`user.email`; `config` input adds an `[include]` to `~/.gitconfig`. Position-independent — no `local-config` here (use `checkout`/`this-repo` for repo-scoped overlay). | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`this-repo`](https://github.com/x-cmd-action/this-repo) | Pure-shell minimal checkout: clone trigger repo into `$GITHUB_WORKSPACE`. 6 inputs. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ssh`](https://github.com/x-cmd-action/ssh) | Pure-shell `ssh-agent` setup + `known_hosts` + key add. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`docker`](https://github.com/x-cmd-action/docker) | Pure-shell `docker login` + `buildx init`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitconfig`](https://github.com/x-cmd-action/gitconfig) | Pure-shell **global** git config (name/email + `[include]` for config file). | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
-### Layer 2 — Common Functions
-
-Higher-level automations. Each composes Layer 1 actions (and x-cmd commands) into a recurring workflow job.
+## Layer 2 — Common CI jobs
 
 | Action | Description | Latest |
 | --- | --- | --- |
-| [`checkout`](https://github.com/x-cmd-action/checkout) | Pure-shell `git checkout`. 22 inputs, 1:1 with `actions/checkout@v4` plus 3 x-cmd enhancements (`known-hosts-url`, `fetch-additional`, `local-config`). Uses `GIT_SSH_COMMAND` with temp files + hardcoded `github.com` key (mirrors `actions/checkout`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. Three list-source styles, fan-out concurrency. Requires x-cmd (uses `x gitb backup`). | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`checkout`](https://github.com/x-cmd-action/checkout) | Pure-shell `git checkout`. 22 inputs, 1:1 with `actions/checkout@v4` + 3 x-cmd enhancements. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`gitmirror`](https://github.com/x-cmd-action/gitmirror) | Sync repos across GitHub ↔ Gitee ↔ Codeberg. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
-### Layer 3 — AI Assist
+## Layer 3 — AI toolkit (LLM via x-cmd's `x ai request`)
 
-AI actions that operate on GitHub-native artifacts (issues, PRs, comments, diffs). Each reads via `x gh`, asks `x ai request`, writes back via `x gh`. No AI SDK, no Node dep — the entire AI call is one `x ai request` line.
+Each Layer 3 action reads a GitHub artifact via `x gh`, asks `x ai request`, writes back via `x gh`. No AI SDK, no Node dep — the entire AI call is one `x ai request` line.
 
 | Action | What it does for you | Latest |
 | --- | --- | --- |
-| [`ai/triage`](https://github.com/x-cmd-action/ai/tree/main/triage) | **Auto-route new issues.** Reads body + existing labels, AI returns `type / priority / area / labels / summary`, bot posts summary and applies suggested labels. Saves the first 5 minutes of every issue. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **First-line responder.** Watches for `@x` in issue/comment bodies, posts a reaction + reply. Combined with a curated FAQ, the bot cites the FAQ section that answers the question. **No AI token required.** | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/review`](https://github.com/x-cmd-action/ai/tree/main/review) | **PR review on every push.** Fetches the PR diff via `gh pr diff`, AI returns Security / Style / Suggestions / Summary, bot posts a structured comment. Accurate enough to flag obvious issues before a human reviews. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/triage`](https://github.com/x-cmd-action/ai/tree/main/triage) | **Auto-label new issues.** Reads body + existing labels, AI returns `type / priority / area / labels / summary`, bot posts summary and applies labels. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/reply`](https://github.com/x-cmd-action/ai/tree/main/reply) | **First-line responder.** Watches for `@x` in issue/comment bodies, posts a reaction + reply. Combined with a FAQ, the bot cites the FAQ section that answers. **No AI token required.** | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/review`](https://github.com/x-cmd-action/ai/tree/main/review) | **PR review on every push.** Fetches the PR diff via `gh pr diff`, AI returns Security / Style / Suggestions / Summary, bot posts a structured comment. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 | [`ai/changelog`](https://github.com/x-cmd-action/ai/tree/main/changelog) | **Weekly community digest.** `schedule: cron`. Collects issues closed + PRs merged in the last N days, AI groups into `Features / Fixes / Performance / Docs / Other`, writes `CHANGELOG.md`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **i18n on demand.** Reads a Markdown file, translates to a target language, writes the result. Markdown-aware — code blocks preserved, URLs and proper nouns kept. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/spec`](https://github.com/x-cmd-action/ai/tree/main/spec) | **RFC + post-mortem drafts.** `mode: rfc` reads a feature request and produces a structured RFC. `mode: postmortem` extracts timeline + root cause + lessons from a closed bug. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`ai/commit`](https://github.com/x-cmd-action/ai/tree/main/commit) | **Conventional Commits enforcement.** `mode: check` validates PR commits, suggests rewrites on failure. `mode: generate` writes a compliant message from the staged diff. Pairs with `ai/changelog`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
-| [`mneme`](https://github.com/x-cmd-action/mneme) | **AI memory layer.** Persists and retrieves LLM context across workflow runs (default backend: GitHub Issue). Lets `ai/review` on PR #123 remember what `ai/triage` said on issue #42 — without `mneme`, every Layer 3 action starts from zero context. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/translate`](https://github.com/x-cmd-action/ai/tree/main/translate) | **i18n on demand.** Reads a Markdown file, translates to a target language. Markdown-aware — code blocks preserved. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/spec`](https://github.com/x-cmd-action/ai/tree/main/spec) | **RFC + post-mortem drafts.** `mode: rfc` or `mode: postmortem`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`ai/commit`](https://github.com/x-cmd-action/ai/tree/main/commit) | **Conventional Commits enforcement.** `mode: check` validates PR commits; `mode: generate` writes a compliant message. Pairs with `ai/changelog`. | ![v1](https://img.shields.io/badge/v1-stable-green) |
+| [`mneme`](https://github.com/x-cmd-action/mneme) | **AI memory layer.** Persists + retrieves LLM context across workflow runs. Lets `ai/review` on PR #123 remember what `ai/triage` said on issue #42. | ![v1](https://img.shields.io/badge/v1-stable-green) |
 
 The full Layer 3 internals (per-action design notes, roadmap, story archive) live in the private [`mneme`](https://github.com/x-cmd-action/mneme) repo.
 
