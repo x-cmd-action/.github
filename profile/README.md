@@ -2,7 +2,7 @@
 
 GitHub Actions that bring the [x-cmd shell library](https://github.com/x-cmd/x-cmd) (and the AI toolkit wrapped by it) into CI runners. Pure shell — no Node.js, no bundled JS, no nested action dependencies.
 
-These actions cover two jobs: wiring the runner up like a local dev box (install x-cmd, configure git/ssh/docker, clone the repo), and helping maintainers triage GitHub-native artifacts (auto-label new issues, draft a PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs). **The AI drafts; humans decide.**
+These actions set the runner up so recurring ops work can actually run — install x-cmd, configure git/ssh/docker, clone the repo, on demand. And they help maintainers triage GitHub-native artifacts (auto-label new issues, draft a PR review on every push, generate a weekly changelog, extract post-mortems from closed bugs). **The AI drafts; humans decide.**
 
 **Design principle.** Recurring ops work lives in portable shell / Python / JS scripts (`x gitb backup`, `x gh`, `x ws`, …) — scripts you can run on your laptop, on a cron, on any CI. These actions are **thin wrappers around those scripts**, not opaque GitHub-Actions-only logic. When the workflow moves off GitHub, the work moves with it.
 
